@@ -1,12 +1,17 @@
 const fs = require("fs");
 const express = require("express");
-const res = require("express/lib/response");
 
 const app = express();
 const port = 9000;
 
 // middleware
 app.use(express.json());
+
+app.use((req, res, next) => {
+  req.time = new Date().toISOString();
+  next();
+});
+// middleware
 
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/dev-data/tours.json`));
 
@@ -45,6 +50,7 @@ const getTourById = (req, res) => {
   res.status(200).json({
     status: "success",
     message: tour,
+    time: req.time,
   });
 };
 const updateTourById = (req, res) => {
