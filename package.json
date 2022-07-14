@@ -10,6 +10,8 @@
   "author": "Maaz Ahmed",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.1"
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "mongoose": "^5.13.14"
   }
 }
