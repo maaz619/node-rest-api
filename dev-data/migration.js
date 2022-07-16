@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const fs = require("fs");
-const Tour = require("../models/tourModel");
+const Tour = require("../models/tourModel").default;
 
 const connectDB = async () => {
   try {
