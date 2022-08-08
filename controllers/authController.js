@@ -3,6 +3,7 @@ const catchAsync = require("../utils/catchAsync");
 const jwt = require("jsonwebtoken");
 const AppError = require("../utils/appError");
 const { promisify } = require("util");
+const { sendEmail } = require("../utils/email");
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_PRIVATE_KEY, {
@@ -15,6 +16,7 @@ const signup = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
     passwordChangedAt: req.body.passwordChangedAt,
+    role: req.body.role,
   });
   const token = signToken(User._id);
   res.status(201).json({
@@ -76,6 +78,53 @@ const restrictTo = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return next(new AppError("You don't have permission!!", 403));
     }
+    next();
   };
 };
-module.exports = { signup, login, protected, restrictTo };
+const resetPassword = catchAsync(async (req, res, next) => {});
+const forgotPassword = catchAsync(async (req, res, next) => {
+  //get user
+  const user = await User.findOne({ email: req.body.email });
+  !user ? next(new AppError("There is no user with this email!!", 404)) : null;
+
+  // generate random token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  // send email
+
+  const resetURL = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/users/resetPassword/${resetToken}`;
+  const message = ` Please follow the link to reset your password: ${resetURL}.\n If you didn't do this please report!!`;
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Your token is valid for only 10 min.",
+      message,
+    });
+    res.status(200).json({
+      status: "success",
+      message: "Reset link has been sent to your email.",
+    });
+  } catch (error) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    console.log(error.message);
+    return next(
+      new AppError(
+        "There was an error sending the email. Please try again later.",
+        500
+      )
+    );
+  }
+});
+module.exports = {
+  signup,
+  login,
+  protected,
+  restrictTo,
+  resetPassword,
+  forgotPassword,
+};

@@ -152,7 +152,7 @@ const updateTour = catchAsync(async (req, res, next) => {
 
 //Delete req to delete an existing tour
 
-const deleteTour = catchAsync(async (req, res) => {
+const deleteTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findByIdAndDelete(req.params.id);
   if (!tour) {
     return next(new AppError("No tour found with this ID"));
