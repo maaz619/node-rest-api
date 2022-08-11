@@ -48,6 +48,11 @@ userSchema.pre("save", async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+userSchema.pre("save", function (next) {
+  if (!this.isModified() || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
 userSchema.methods.correctPassword = async function (
   providedPassword,
   userPassword
@@ -64,7 +69,9 @@ userSchema.methods.changePasswordAfter = function (JWTTimestamp) {
 };
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = randomBytes(32).toString("hex");
-  this.passwordResetToken = createHash("sha256", resetToken).digest("hex");
+  this.passwordResetToken = createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
   this.passwordResetExpires = Date.now() + 10 * 60000;
   console.log({ resetToken }, this.passwordResetToken);
   return resetToken;
