@@ -10,6 +10,16 @@ const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_PRIVATE_KEY, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
+};
 const signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -19,14 +29,7 @@ const signup = catchAsync(async (req, res, next) => {
     // passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
   });
-  const token = signToken(User._id);
-  res.status(201).json({
-    status: "success",
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createSendToken(newUser, 201, res);
 });
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
@@ -37,11 +40,7 @@ const login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Incorrect email or password"), 400);
   }
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: "success",
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 const protected = catchAsync(async (req, res, next) => {
   // checking if getting token or not
@@ -141,13 +140,25 @@ const resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
   // if password expired
   //Login the user
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: "success",
-    token,
-  });
+  createSendToken(user, 200, res);
 });
-const updatePassword = catchAsync(async (res, req, next) => {});
+const updatePassword = catchAsync(async (req, res, next) => {
+  //get the user
+  const user = await User.findById(req.user.id).select("+password");
+  //check old password
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    return next(new AppError("You current password is invalid", 401));
+  }
+  if (req.body.passwordCurrent === req.body.password)
+    return next(
+      new AppError("New password cannot be same as you old password", 400)
+    );
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+  createSendToken(user, 200, res);
+});
 module.exports = {
   signup,
   login,
@@ -155,4 +166,5 @@ module.exports = {
   restrictTo,
   resetPassword,
   forgotPassword,
+  updatePassword,
 };
