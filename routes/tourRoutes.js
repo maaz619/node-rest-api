@@ -1,6 +1,7 @@
 const express = require("express");
-const tourController = require("../controllers/tourContollers");
+const tourController = require("../controllers/tourControllers");
 const { protected, restrictTo } = require("../controllers/authController");
+const reviewRouter = require("../routes/reviewRoutes");
 
 const {
   getAllTour,
@@ -15,13 +16,15 @@ const {
 
 const router = express.Router();
 
-router.route("/").get(protected, getAllTour).post(createTour);
+router.use("/:tourId/review", reviewRouter);
 
-router.route("/tour-stats").get(getTourStats);
+router.route("/").get(protected, getAllTour).post(protected, createTour);
 
-router.route("/monthly-plan/:year").get(getMonthlyPlan);
+router.route("/tour-stats").get(protected, getTourStats);
 
-router.route("/top-tour").get(topTour, getAllTour);
+router.route("/monthly-plan/:year").get(protected, getMonthlyPlan);
+
+router.route("/top-tour").get(topTour, protected, getAllTour);
 
 router
   .route("/:id")

@@ -2,6 +2,7 @@ const Tour = require("../models/tourModel");
 const APIFeatures = require("../utils/apiFeatures");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
+const { deleteOne } = require("./handleFactory");
 
 //Get req to fetch all the tour
 
@@ -98,7 +99,7 @@ const getMonthlyPlan = catchAsync(async (req, res, next) => {
 //Get req to fetch a single tour by Id
 
 const getTourById = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findOne({ _id: req.params.id });
+  const tour = await Tour.findOne({ _id: req.params.id }).populate("reviews");
   //if no tour found it'll skip direct to our global error handler
   if (!tour) {
     return next(new AppError("No tour found with this ID", 404));
@@ -152,16 +153,7 @@ const updateTour = catchAsync(async (req, res, next) => {
 
 //Delete req to delete an existing tour
 
-const deleteTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
-  if (!tour) {
-    return next(new AppError("No tour found with this ID"));
-  }
-  res.status(201).json({
-    status: "success",
-    data: null,
-  });
-});
+const deleteTour = deleteOne(Tour);
 //exporting all the above functions
 module.exports = {
   getAllTour,

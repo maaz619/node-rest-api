@@ -15,7 +15,7 @@ const connectDB = async () => {
   }
 };
 connectDB();
-const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`));
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/allTours.json`));
 const migrateData = async () => {
   try {
     await Tour.create(tours);
