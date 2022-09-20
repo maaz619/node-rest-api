@@ -1,27 +1,9 @@
 const Tour = require("../models/tourModel");
-const APIFeatures = require("../utils/apiFeatures");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const { deleteOne } = require("./handleFactory");
+const { deleteOne, updateOne, getOne, getAll } = require("./handleFactory");
 
 //Get req to fetch all the tour
-
-const getAllTour = catchAsync(async (req, res, next) => {
-  const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .limitingField()
-    .sort()
-    .pagination();
-  const tours = await features.query;
-
-  res.status(200).json({
-    status: "success",
-    result: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
 
 //Get req to fetch tour stats
 
@@ -98,20 +80,6 @@ const getMonthlyPlan = catchAsync(async (req, res, next) => {
 
 //Get req to fetch a single tour by Id
 
-const getTourById = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findOne({ _id: req.params.id }).populate("reviews");
-  //if no tour found it'll skip direct to our global error handler
-  if (!tour) {
-    return next(new AppError("No tour found with this ID", 404));
-  }
-  res.status(200).json({
-    status: "success",
-    data: {
-      tour,
-    },
-  });
-});
-
 //Get req for top 5 tour
 
 const topTour = (req, res, next) => {
@@ -133,26 +101,9 @@ const createTour = catchAsync(async (req, res, next) => {
   });
 });
 
-//Patch req to update an existing tour
-
-const updateTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    runValidators: true,
-    new: true,
-  });
-  if (!tour) {
-    return next(new AppError("No tour found with this ID"));
-  }
-  res.status(201).json({
-    status: "success",
-    data: {
-      tour: tour,
-    },
-  });
-});
-
-//Delete req to delete an existing tour
-
+const getTourById = getOne(Tour, { path: "reviews" });
+const getAllTour = getAll(Tour);
+const updateTour = updateOne(Tour);
 const deleteTour = deleteOne(Tour);
 //exporting all the above functions
 module.exports = {

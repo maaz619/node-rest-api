@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
+const { getOne, getAll } = require("./handleFactory");
 
 const filterObj = (obj, ...allowFields) => {
   const newObj = {};
@@ -9,16 +10,15 @@ const filterObj = (obj, ...allowFields) => {
   });
   return newObj;
 };
-const getAllUsers = catchAsync(async (req, res) => {
-  const users = await User.find();
-  res.status(200).json({
-    status: "success",
-    results: users.length,
-    data: {
-      users,
-    },
-  });
-});
+
+const getAllUsers = getAll(User);
+
+const getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
+const getUser = getOne(User);
 
 const updateMe = catchAsync(async (req, res, next) => {
   if (req.body.password || req.body.passwordConfirm) {
@@ -46,12 +46,7 @@ const createUser = (req, res) => {
     message: "route not define yet",
   });
 };
-const getUser = (req, res) => {
-  res.status(500).json({
-    status: "err",
-    message: "route not define yet",
-  });
-};
+
 const updateUser = (req, res) => {
   res.status(500).json({
     status: "err",
@@ -74,4 +69,5 @@ module.exports = {
   getUser,
   updateUser,
   deleteMe,
+  getMe,
 };

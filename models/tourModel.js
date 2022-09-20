@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
-const User = require("./userModel");
 
 const tourSchema = new mongoose.Schema(
   {
@@ -43,6 +42,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: 1,
       max: 5,
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
@@ -96,6 +96,7 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    //embedding
     // guides: Array,
     // reference
     guides: [
@@ -127,6 +128,8 @@ tourSchema.pre("save", function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+
+tourSchema.index({ price: 1, ratingsAverage: -1 });
 //embedding
 
 // tourSchema.pre("save", async function (next) {

@@ -10,11 +10,14 @@ const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const xssClean = require("xss-clean");
 const hpp = require("hpp");
+const cors = require("cors");
 
 const app = express();
 
 // middleware
 app.use(helmet());
+
+app.use(cors({ origin: "localhost:8000" }));
 
 //body parser
 app.use(express.json({ limit: "10kb" }));
@@ -37,11 +40,11 @@ app.use((req, res, next) => {
 });
 //limit middleware
 
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 3600000,
-  message: "too many request from same IP.",
-});
+// const limiter = rateLimit({
+//   max: 100,
+//   windowMs: 3600000,
+//   message: "too many request from same IP.",
+// });
 //slower middleware
 
 // const slower = rateSlow({
@@ -50,7 +53,7 @@ const limiter = rateLimit({
 //   delayMs: 1000,
 // });
 
-app.use("/api", limiter);
+// app.use("/api", limiter);
 
 // routing
 
