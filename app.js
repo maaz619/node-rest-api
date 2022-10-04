@@ -11,19 +11,21 @@ const mongoSanitize = require("express-mongo-sanitize");
 const xssClean = require("xss-clean");
 const hpp = require("hpp");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
 // middleware
 app.use(helmet());
 
-app.use(cors({ origin: "localhost:8000" }));
+app.use(cors({ origin: "http://localhost:3000" }));
 
 //body parser
 app.use(express.json({ limit: "10kb" }));
 
 //data sanitization against NoSql query injection
 app.use(mongoSanitize());
+app.use(cookieParser());
 
 //for static files
 app.use(express.static(`${__dirname}/public}`));
@@ -36,6 +38,7 @@ app.use(hpp({ whitelist: ["duration", "difficulty", "price"] }));
 // test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+  console.log(req.cookies);
   next();
 });
 //limit middleware

@@ -59,7 +59,7 @@ const protected = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
-  }
+  } else if (req.cookies.jwt) token = req.cookies.jwt;
   if (!token) return next(new AppError("Unauthorized access!!", 401));
   //token verification
   const decoded = await promisify(jwt.verify)(
@@ -169,9 +169,16 @@ const updatePassword = catchAsync(async (req, res, next) => {
 
   createSendToken(user, 200, res);
 });
+const logout = catchAsync(async (req, res) => {
+  res.clearCookie("jwt");
+  res.status(200).json({
+    status: "success",
+  });
+});
 module.exports = {
   signup,
   login,
+  logout,
   protected,
   restrictTo,
   resetPassword,
